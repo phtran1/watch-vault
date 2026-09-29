@@ -1,3 +1,4 @@
+# Using gitkeep to track data folder
 data/*
 !data/.gitkeep
 
@@ -6,3 +7,7 @@ __pycache__/
 *.pyo
 
 .vscode/
+
+# Local Kubernetes & Infrastructure temporary files
+.minikube/
+.kube/

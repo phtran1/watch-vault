@@ -126,9 +126,22 @@ class Collection:
     def remove(self, watch):
         self.watches.remove(watch)
 
+    def collection_health(self):
+        # Prints all watched currently in the collection
+        if not self.watches:
+            print("Empty Collection")
+            return
+
+        print(f"\n--- My Watch Collection Health---\n")
+        for watch in self.watches:
+            score = watch.health_score()
+            print(f'{watch.brand} {watch.model}: {score}')
+            print("-" * 30)
+
     def show_collection(self):
         # Prints all watched currently in the collection
         if not self.watches:
+            print("Empty Collection")
             return
 
         print(f"\n--- My Watch Collection ---\n")

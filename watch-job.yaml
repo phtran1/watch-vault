@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: watch-collector-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: watch-collector
+    spec:
+      containers:
+      - name: watch-app
+        image: watch-collector:v1
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: watch-data-storage
+          mountPath: /app/data
+      
+      restartPolicy: Never
+
+      volumes:
+      - name: watch-data-storage
+        emptyDir: {}
