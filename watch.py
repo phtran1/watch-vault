@@ -3,12 +3,13 @@ from datetime import date
 import statistics
 
 class Watch:
-    def __init__(self, brand, model, ref_no="N/A", serial_no="N/A", movement_type=None, accuracy_day=None, accuracy_month=None, last_reset_date=None):
+    def __init__(self, brand, model, ref_no="N/A", serial_no="N/A", movement_type=None, accuracy_sec_day=None, accuracy_sec_month=None, last_reset_date=None):
         self.brand = brand
         self.model = model
         self.ref_no = ref_no
         self.serial_no = serial_no
         self.movement_type = movement_type
+        self.accuracy_sec_month = accuracy_sec_month
         self.accuracy_log = []
         # Tracks the id of the drift logs up until next reset
         self.current_id = 1
@@ -18,10 +19,10 @@ class Watch:
         else:
             self.last_reset_date = date.today()
         
-        if accuracy_month is not None:
-            self.accuracy_sec = accuracy_month / 30
+        if accuracy_sec_month is not None:
+            self.accuracy_sec_day = accuracy_sec_month / 30
         else:
-            self.accuracy_sec = accuracy_day
+            self.accuracy_sec_day = accuracy_sec_day
 
     # Logging daily drift for watch
     def log_drift(self, drift_sec, as_of=None):
@@ -77,9 +78,9 @@ class Watch:
         # Maths the standard deviation to see if the drift rate is consistent
         consistency = statistics.stdev(rates)
     
-        if self.accuracy_sec is not None:
-            within_avg = abs(avg_rate) <= self.accuracy_sec
-            is_consistent = consistency <= self.accuracy_sec
+        if self.accuracy_sec_day is not None:
+            within_avg = abs(avg_rate) <= self.accuracy_sec_day
+            is_consistent = consistency <= self.accuracy_sec_day
    
             if within_avg and is_consistent:
                 return "Performing within spec"
@@ -87,7 +88,7 @@ class Watch:
             elif within_avg and not is_consistent:
                 return "Erractic - inconsistent day to day"
 
-            elif abs(avg_rate) <= self.accuracy_sec * 2:
+            elif abs(avg_rate) <= self.accuracy_sec_day * 2:
                 return "Slightly out of spec"
             
             else:
@@ -98,10 +99,11 @@ class Watch:
     def to_dict(self):
         watch_db = {'brand': self.brand,
                     'model': self.model,
-                    'reference NO': self.ref_no,
-                    'serial NO': self.serial_no,
+                    'ref_no': self.ref_no,
+                    'serial_no': self.serial_no,
                     'movement_type': self.movement_type,
-                    'accuracy_sec': self.accuracy_sec,
+                    'accuracy_sec_day': self.accuracy_sec_day,
+                    'accuracy_sec_month': self.accuracy_sec_month,
                     'current_run_id': self.current_id,
                     'last_reset_date': self.last_reset_date.isoformat(),
                     'accuracy_log': self.accuracy_log
@@ -109,11 +111,25 @@ class Watch:
 
         return watch_db
 
+    @staticmethod
+    def from_dict(data):
+        watch_db = Watch(brand = data['brand'], 
+                         model = data['model'], 
+                         ref_no= data['ref_no'], 
+                         serial_no= data['serial_no'], 
+                         movement_type= data['movement_type'], 
+                         accuracy_sec_day= data['accuracy_sec_day'], 
+                         accuracy_sec_month= data['accuracy_sec_month'], 
+                         last_reset_date= date.fromisoformat(data['last_reset_date']))
+        watch_db.current_id = data['current_run_id']
+        watch_db.accuracy_log = data['accuracy_log']  
+
+        return watch_db
     def specs(self):
         print(f"Watch: {self.brand} {self.model}")
         print(f"Ref NO: {self.ref_no} \nSerial NO: {self.serial_no}")
         print(f"Movement: {self.movement_type}")
-        print(f"Accuracy: {self.accuracy_sec}")
+        print(f"Accuracy: {self.accuracy_sec_day}")
 
 class Collection:
     def __init__(self):
@@ -166,11 +182,19 @@ class Collection:
         try:
             with open('./data/collection.json', mode='w', encoding='utf-8') as output_file:
                 json.dump(json_data, output_file, indent=4)
-        except IOError as err:
+        except IOError:
             print("Error writing file.")
-            raise err
 
+    def load_from_json(self):
+        try:
+            with open('./data/collection.json', mode='r', encoding='utf-8') as input_file:
+                data = json.load(input_file)
+                for watch_data in data:
+                    watch = Watch.from_dict(watch_data)
+                    self.watches.append(watch)
 
+        except FileNotFoundError:
+            print("No saved collection found.")
 
 
 
