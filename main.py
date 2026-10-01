@@ -1,6 +1,6 @@
 import json
 from watch import Watch, Collection
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 
 if __name__ == "__main__":
     # my_vault = Collection()
@@ -26,6 +26,19 @@ if __name__ == "__main__":
     # my_vault.collection_health()
     vault = Collection()
     vault.load_from_json()
-    vault.show_collection()
+    # vault.show_collection()
+    my_citi = vault.find_ref_no('BM8180-03E')
+    my_citi.log_drift(4, as_of=date.today() + timedelta(days=8))
+    my_citi.log_drift(4, as_of=date.today() + timedelta(days=6))
+    # my_citi.log_drift(5)
+    # vault.collection_health()
+    # vault.find_ref_no('SBTM325')
     # vault.export_to_txt()
     # vault.collection_health()
+    my_citi.reset()
+    my_citi.log_drift(1, as_of=datetime.now(timezone.utc) + timedelta(days=1))
+    my_citi.log_drift(1.5, as_of=datetime.now(timezone.utc) + timedelta(days=2))
+    my_citi.log_drift(2, as_of=datetime.now(timezone.utc) + timedelta(days=3))
+    my_citi.log_drift(2.5, as_of=datetime.now(timezone.utc) + timedelta(days=4))
+    my_citi.log_drift(3.1, as_of=datetime.now(timezone.utc) + timedelta(days=5))
+    print(my_citi.health_score())
